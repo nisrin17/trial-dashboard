@@ -1,0 +1,663 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MasterHeader {
+  id            Int           @id @default(autoincrement())
+  description   String
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  masterOccupations     MasterOccupation[]
+  surveyQuestions       SurveyQuestion[]
+  surveyQuestionDetails SurveyQuestionDetail[]
+
+  users_master_header_deletedByIdTousers SurveyUser?   @relation("master_header_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_master_header_updatedByIdTousers SurveyUser?   @relation("master_header_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_master_header_createdByIdTousers SurveyUser?   @relation("master_header_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "master_header")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model MasterLanguage {
+  id            Int           @id @default(autoincrement())
+  description   String
+  code          String        @db.VarChar(5)
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyQuestions     SurveyQuestion[]
+  masterOccupations   MasterOccupation[]
+
+  users_master_language_deletedByIdTousers SurveyUser?   @relation("master_language_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_master_language_updatedByIdTousers SurveyUser?   @relation("master_language_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_master_language_createdByIdTousers SurveyUser?   @relation("master_language_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "master_language")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model MasterOccupation {
+  id                Int           @id @default(autoincrement())
+  masterHeaderId    Int?
+  masterLanguageId  Int?
+  description       String
+  status            Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  sort              Int?
+  isDeleted         Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt         DateTime?     @map(name: "deleted_at")
+  createdById       Int?
+  updatedById       Int?
+  deletedById       Int?
+  createdAt         DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt         DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  masterHeader      MasterHeader?     @relation(fields: [masterHeaderId], references: [id])
+  masterLanguage    MasterLanguage?   @relation(fields: [masterLanguageId], references: [id])
+  surveyUsers       SurveyUser[]
+  users_master_occupation_deletedByIdTousers SurveyUser?   @relation("master_occupation_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_master_occupation_updatedByIdTousers SurveyUser?   @relation("master_occupation_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_master_occupation_createdByIdTousers SurveyUser?   @relation("master_occupation_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "master_occupation")
+
+  @@index([masterHeaderId,masterLanguageId])
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyUser {
+  id            Int           @id @default(autoincrement())
+  occupationId  Int?
+  uuid          String        @default(uuid()) @unique
+  name          String?       @db.VarChar(100)
+  age           Int?
+  age_range     String?       @db.VarChar(150) 
+  hp            String?       @db.VarChar(20) @unique
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  is_push       Int           @db.SmallInt() @default(0) /// 0: pending 1: done 2:process
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyAnswers  SurveyAnswer[]
+  survey_answer_survey_answer_deletedByIdTousers  SurveyAnswer[]  @relation("survey_answer_deletedByIdTousers")
+  survey_answer_survey_answer_updatedByIdTousers  SurveyAnswer[]  @relation("survey_answer_updatedByIdTousers")
+  survey_answer_survey_answer_createdByIdTousers  SurveyAnswer[]  @relation("survey_answer_createdByIdTousers")
+  
+  master_header_master_header_deletedByIdTousers  MasterHeader[]  @relation("master_header_deletedByIdTousers")
+  master_header_master_header_updatedByIdTousers  MasterHeader[]  @relation("master_header_updatedByIdTousers")
+  master_header_master_header_createdByIdTousers  MasterHeader[]  @relation("master_header_createdByIdTousers")
+
+  survey_answer_det_survey_answer_det_deletedByIdTousers  SurveyAnswerDetail[]  @relation("survey_answer_det_deletedByIdTousers")
+  survey_answer_det_survey_answer_det_updatedByIdTousers  SurveyAnswerDetail[]  @relation("survey_answer_det_updatedByIdTousers")
+  survey_answer_det_survey_answer_det_createdByIdTousers  SurveyAnswerDetail[]  @relation("survey_answer_det_createdByIdTousers")
+
+  occupation    MasterOccupation?   @relation(fields: [occupationId], references: [id])
+  master_occupation_master_occupation_deletedByIdTousers  MasterOccupation[]  @relation("master_occupation_deletedByIdTousers")
+  master_occupation_master_occupation_updatedByIdTousers  MasterOccupation[]  @relation("master_occupation_updatedByIdTousers")
+  master_occupation_master_occupation_createdByIdTousers  MasterOccupation[]  @relation("master_occupation_createdByIdTousers")
+
+  master_language_master_language_deletedByIdTousers  MasterLanguage[]  @relation("master_language_deletedByIdTousers")
+  master_language_master_language_updatedByIdTousers  MasterLanguage[]  @relation("master_language_updatedByIdTousers")
+  master_language_master_language_createdByIdTousers  MasterLanguage[]  @relation("master_language_createdByIdTousers")
+
+  survey_type_survey_type_deletedByIdTousers  SurveyType[]  @relation("survey_type_deletedByIdTousers")
+  survey_type_survey_type_updatedByIdTousers  SurveyType[]  @relation("survey_type_updatedByIdTousers")
+  survey_type_survey_type_createdByIdTousers  SurveyType[]  @relation("survey_type_createdByIdTousers")
+
+  survey_question_type_survey_question_type_deletedByIdTousers  SurveyQuestionType[]  @relation("survey_question_type_deletedByIdTousers")
+  survey_question_type_survey_question_type_updatedByIdTousers  SurveyQuestionType[]  @relation("survey_question_type_updatedByIdTousers")
+  survey_question_type_survey_question_type_createdByIdTousers  SurveyQuestionType[]  @relation("survey_question_type_createdByIdTousers")
+
+  survey_question_survey_question_deletedByIdTousers  SurveyQuestion[]  @relation("survey_question_deletedByIdTousers")
+  survey_question_survey_question_updatedByIdTousers  SurveyQuestion[]  @relation("survey_question_updatedByIdTousers")
+  survey_question_survey_question_createdByIdTousers  SurveyQuestion[]  @relation("survey_question_createdByIdTousers")
+
+  survey_question_detail_survey_question_detail_deletedByIdTousers  SurveyQuestionDetail[]  @relation("survey_question_detail_deletedByIdTousers")
+  survey_question_detail_survey_question_detail_updatedByIdTousers  SurveyQuestionDetail[]  @relation("survey_question_detail_updatedByIdTousers")
+  survey_question_detail_survey_question_detail_createdByIdTousers  SurveyQuestionDetail[]  @relation("survey_question_detail_createdByIdTousers")
+
+  voucher_voucher_deletedByIdTousers  Voucher[]  @relation("voucher_deletedByIdTousers")
+  voucher_voucher_updatedByIdTousers  Voucher[]  @relation("voucher_updatedByIdTousers")
+  voucher_voucher_createdByIdTousers  Voucher[]  @relation("voucher_createdByIdTousers")
+
+  survey_prize_survey_prize_deletedByIdTousers  SurveyPrize[]  @relation("survey_prize_deletedByIdTousers")
+  survey_prize_survey_prize_updatedByIdTousers  SurveyPrize[]  @relation("survey_prize_updatedByIdTousers")
+  survey_prize_survey_prize_createdByIdTousers  SurveyPrize[]  @relation("survey_prize_createdByIdTousers")
+
+  winners                           Winner[]
+  winner_winner_deletedByIdTousers  Winner[]  @relation("winner_deletedByIdTousers")
+  winner_winner_updatedByIdTousers  Winner[]  @relation("winner_updatedByIdTousers")
+  winner_winner_createdByIdTousers  Winner[]  @relation("winner_createdByIdTousers")
+
+  transaction_transaction_deletedByIdTousers  Transaction[]  @relation("transaction_deletedByIdTousers")
+  transaction_transaction_updatedByIdTousers  Transaction[]  @relation("transaction_updatedByIdTousers")
+  transaction_transaction_createdByIdTousers  Transaction[]  @relation("transaction_createdByIdTousers")
+
+  general_parameter_general_parameter_deletedByIdTousers  GeneralParameter[]  @relation("general_parameter_deletedByIdTousers")
+  general_parameter_general_parameter_updatedByIdTousers  GeneralParameter[]  @relation("general_parameter_updatedByIdTousers")
+  general_parameter_general_parameter_createdByIdTousers  GeneralParameter[]  @relation("general_parameter_createdByIdTousers")
+
+  reply_reply_deletedByIdTousers  Reply[]  @relation("reply_deletedByIdTousers")
+  reply_reply_updatedByIdTousers  Reply[]  @relation("reply_updatedByIdTousers")
+  reply_reply_createdByIdTousers  Reply[]  @relation("reply_createdByIdTousers")
+  @@map(name: "survey_user")
+}
+
+model SurveyType {
+  id            Int           @id @default(autoincrement())
+  description   String
+  start         DateTime?     @db.Timestamp(6)
+  end           DateTime?     @db.Timestamp(6)
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyQuestions  SurveyQuestion[]
+  surveyAnswers    SurveyAnswer[]
+
+  users_survey_type_deletedByIdTousers SurveyUser?   @relation("survey_type_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_type_updatedByIdTousers SurveyUser?   @relation("survey_type_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_type_createdByIdTousers SurveyUser?   @relation("survey_type_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_type")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyQuestionType {
+  id            Int           @id @default(autoincrement())
+  description   String
+  type          String     
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyQuestions  SurveyQuestion[]
+
+  users_survey_question_type_deletedByIdTousers SurveyUser?   @relation("survey_question_type_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_question_type_updatedByIdTousers SurveyUser?   @relation("survey_question_type_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_question_type_createdByIdTousers SurveyUser?   @relation("survey_question_type_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_question_type")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyQuestion {
+  id                    Int           @id @default(autoincrement())
+  masterHeaderId        Int?
+  masterLanguageId      Int?
+  surveyTypeId          Int?
+  surveyQuestionTypeId  Int?
+  sort                  Int?
+  no                    String?       @db.VarChar(9)
+  header                String?       @db.VarChar(9) /// sub number question
+  description           String?   
+  max                   Int           @db.SmallInt() @default(1)
+  min                   Int           @db.SmallInt() @default(1)
+  required              Int           @db.SmallInt() @default(0) /// 0: false 1: true
+  status                Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted             Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt             DateTime?     @map(name: "deleted_at")
+  createdById           Int?
+  updatedById           Int?
+  deletedById           Int?
+  createdAt             DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt             DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  masterHeader          MasterHeader?         @relation(fields: [masterHeaderId], references: [id])
+  surveyType            SurveyType?           @relation(fields: [surveyTypeId], references: [id])
+  surveyQuestionType    SurveyQuestionType?   @relation(fields: [surveyQuestionTypeId], references: [id])
+  masterLanguage        MasterLanguage?       @relation(fields: [masterLanguageId], references: [id])
+
+  surveyQuestionsDets   SurveyQuestionDetail[]
+
+  users_survey_question_deletedByIdTousers SurveyUser?   @relation("survey_question_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_question_updatedByIdTousers SurveyUser?   @relation("survey_question_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_question_createdByIdTousers SurveyUser?   @relation("survey_question_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_question")
+
+  @@index([masterHeaderId,masterLanguageId])
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyQuestionDetail {
+  id                    Int           @id @default(autoincrement())
+  surveyQuestionId      Int?
+  masterHeaderId        Int?
+  description           String?
+  value                 String        @db.VarChar(20)
+  sort                  Int?
+  status                Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted             Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt             DateTime?     @map(name: "deleted_at")
+  createdById           Int?
+  updatedById           Int?
+  deletedById           Int?
+  createdAt             DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt             DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyQuestion      SurveyQuestion?   @relation(fields: [surveyQuestionId], references: [id])
+  masterHeader        MasterHeader?   @relation(fields: [masterHeaderId], references: [id])
+  surveyAnswerDet     SurveyAnswerDetail[]
+
+  users_survey_question_detail_deletedByIdTousers SurveyUser?   @relation("survey_question_detail_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_question_detail_updatedByIdTousers SurveyUser?   @relation("survey_question_detail_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_question_detail_createdByIdTousers SurveyUser?   @relation("survey_question_detail_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_question_det")
+
+  @@index([masterHeaderId])
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyAnswer {
+  id                    Int           @id @default(autoincrement())
+  surveyUserId          Int?
+  surveyTypeId          Int?
+  status                Int           @db.SmallInt() @default(0) /// 0: not done 1: done
+  isDeleted             Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt             DateTime?     @map(name: "deleted_at")
+  createdById           Int?
+  updatedById           Int?
+  deletedById           Int?
+  createdAt             DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt             DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyUser            SurveyUser?           @relation(fields: [surveyUserId], references: [id])
+  surveyType            SurveyType?           @relation(fields: [surveyTypeId], references: [id])
+  survetAnswerDets      SurveyAnswerDetail[]
+
+  users_survey_answer_deletedByIdTousers SurveyUser?   @relation("survey_answer_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_answer_updatedByIdTousers SurveyUser?   @relation("survey_answer_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_answer_createdByIdTousers SurveyUser?   @relation("survey_answer_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_answer")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyAnswerDetail {
+  id                      Int           @id @default(autoincrement())
+  surveyAnswerId          Int?
+  surveyQuestionDetId     Int?
+  status                  Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted               Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt               DateTime?     @map(name: "deleted_at")
+  createdById             Int?
+  updatedById             Int?
+  deletedById             Int?
+  createdAt               DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt               DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyAnswer            SurveyAnswer?           @relation(fields: [surveyAnswerId], references: [id])
+  surveyQuestionDet       SurveyQuestionDetail?   @relation(fields: [surveyQuestionDetId], references: [id])
+
+  users_survey_answer_det_deletedByIdTousers SurveyUser?   @relation("survey_answer_det_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_answer_det_updatedByIdTousers SurveyUser?   @relation("survey_answer_det_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_answer_det_createdByIdTousers SurveyUser?   @relation("survey_answer_det_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_answer_det")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model Voucher {
+  id                      Int           @id @default(autoincrement())
+  name                    String        @db.VarChar(255)
+  code                    String        @db.VarChar(255)
+  amount                  String        @db.VarChar(50)
+  type                    Int           @db.SmallInt() @default(1) /// 1->mobilepulsa,2->iris
+  category                Int           @db.SmallInt() @default(1) /// 1->redeem,2->tukar point
+  status                  Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted               Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt               DateTime?     @map(name: "deleted_at")
+  createdById             Int?
+  updatedById             Int?
+  deletedById             Int?
+  createdAt               DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt               DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyPrizes            SurveyPrize[]
+  winners                 Winner[]
+
+  users_voucher_deletedByIdTousers SurveyUser?   @relation("voucher_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_voucher_updatedByIdTousers SurveyUser?   @relation("voucher_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_voucher_createdByIdTousers SurveyUser?   @relation("voucher_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "voucher")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model SurveyPrize {
+  id                      Int           @id @default(autoincrement())
+  voucherId               Int?
+  name                    String        @db.VarChar(255)
+  picture                 String        @db.VarChar(255)
+  amount                  String        @db.VarChar(50)
+  codes                   String        @db.VarChar(50)
+  prize_reply             String
+  quantity                Int
+  topupType               Int           @db.SmallInt() @default(0) /// 1-> mobilepulsa, 2-> iris, 3-> fisik
+  sort                    Int
+  point                   Int
+  isTopup                 Int           @db.SmallInt() @default(0) /// 0->tidak perlu ditopup,1->perlu ditopup
+  status                  Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted               Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt               DateTime?     @map(name: "deleted_at")
+  createdById             Int?
+  updatedById             Int?
+  deletedById             Int?
+  createdAt               DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt               DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  voucher                 Voucher?           @relation(fields: [voucherId], references: [id])
+  winners                 Winner[]
+
+  users_survey_prize_deletedByIdTousers SurveyUser?   @relation("survey_prize_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_prize_updatedByIdTousers SurveyUser?   @relation("survey_prize_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_survey_prize_createdByIdTousers SurveyUser?   @relation("survey_prize_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "survey_prize")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model Winner {
+  id                      Int           @id @default(autoincrement())
+  surveyPrizeId           Int?
+  surveyUserId            Int?
+  voucherId               Int?
+  masterBrandId           String?       @db.VarChar(255)
+  status                  Int           @db.SmallInt() @default(0) /// 0->unprocessed, 1->processed, 2->success, 3->failed
+  total                   Int           @default(0)
+  account_number          String        @db.VarChar(50)
+  code_topup              String        @db.VarChar(255)
+  amount                  String        @db.VarChar(255)
+  isPush                  Int           @db.SmallInt() @default(0) /// 0->not push, 1->pushed, 2->on queue
+  type                    Int           @db.SmallInt() @default(0) /// 1-> mobilepulsa, 2-> iris, 3-> fisik
+  isDeleted               Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt               DateTime?     @map(name: "deleted_at")
+  createdById             Int?
+  updatedById             Int?
+  deletedById             Int?
+  createdAt               DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt               DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  surveyPrize             SurveyPrize?          @relation(fields: [surveyPrizeId], references: [id])
+  surveyUser              SurveyUser?           @relation(fields: [surveyUserId], references: [id])
+  voucher                 Voucher?              @relation(fields: [voucherId], references: [id])
+  transactions            Transaction[]
+
+  users_winner_deletedByIdTousers SurveyUser?   @relation("winner_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_winner_updatedByIdTousers SurveyUser?   @relation("winner_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_winner_createdByIdTousers SurveyUser?   @relation("winner_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "winner")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model Transaction {
+  id                      Int           @id @default(autoincrement())
+  winnerId                Int?
+  status                  Int           @db.SmallInt() @default(0) /// 0->unprocessed, 1->processed, 2->success, 3->failed
+  reason                  String        @db.VarChar(100)  @default("")
+  resi                    String        @db.VarChar(100)  @default("")
+  account_number          String        @db.VarChar(100)  @default("")
+  reference               String        @db.VarChar(100)  @default("")
+  code                    String        @db.VarChar(100)  @default("")
+  price                   String        @db.VarChar(100)  @default("")
+  sn                      String        @db.VarChar(100)  @default("")
+  balance                 String        @db.VarChar(100)  @default("")
+  tr_id                   String        @db.VarChar(100)  @default("")
+  rc                      String        @db.VarChar(100)  @default("")
+  pin                     String        @db.VarChar(100)  @default("")
+  amount                  String        @db.VarChar(100)  @default("")
+  expired                 DateTime?
+  proccesed_date          DateTime?
+  isDeleted               Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt               DateTime?     @map(name: "deleted_at")
+  createdById             Int?
+  updatedById             Int?
+  deletedById             Int?
+  createdAt               DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt               DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  winner                  Winner?           @relation(fields: [winnerId], references: [id])
+
+  users_transaction_deletedByIdTousers SurveyUser?   @relation("transaction_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_transaction_updatedByIdTousers SurveyUser?   @relation("transaction_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_transaction_createdByIdTousers SurveyUser?   @relation("transaction_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "transaction")
+
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model GeneralParameter {
+  id            Int           @id @default(autoincrement())
+  masterBrandId String?       @db.VarChar(255)
+  name          String        @db.VarChar(255)
+  description   String        @db.VarChar(255)
+  value         String
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  users_general_parameter_deletedByIdTousers SurveyUser?   @relation("general_parameter_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_general_parameter_updatedByIdTousers SurveyUser?   @relation("general_parameter_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_general_parameter_createdByIdTousers SurveyUser?   @relation("general_parameter_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "general_parameter")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model Reply {
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar(255)
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  title String
+  reply_message String
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  users_reply_deletedByIdTousers SurveyUser?   @relation("reply_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_reply_updatedByIdTousers SurveyUser?   @relation("reply_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_reply_createdByIdTousers SurveyUser?   @relation("reply_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map(name: "reply")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+
+//TABLE DASHBOARD
+model Access {
+  id            Int           @id @default(autoincrement())
+  description   String        @db.VarChar(255)
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime?     @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  accessDet     AccessDet[]
+  users         Users[]
+
+  users_access_deletedByIdTousers Users?   @relation("access_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_access_updatedByIdTousers Users?   @relation("access_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_access_createdByIdTousers Users?   @relation("access_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map(name: "access")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model AccessDet {
+  id            Int           @id @default(autoincrement())
+  m_insert      Int           @db.SmallInt() @default(0) /// 0: inactive 1: active
+  m_update      Int           @db.SmallInt() @default(0) /// 0: inactive 1: active
+  m_delete      Int           @db.SmallInt() @default(0) /// 0: inactive 1: active
+  m_view        Int           @db.SmallInt() @default(0) /// 0: inactive 1: active
+  m_export      Int           @db.SmallInt() @default(0) /// 0: inactive 1: active
+  m_import      Int           @db.SmallInt() @default(0) /// 0: inactive 1: active
+  accessId      Int?
+  menuId      Int?
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime?     @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  access     Access?     @relation(fields: [accessId], references: [id])
+  menu       Menu?       @relation(fields: [menuId], references: [id])
+
+  users_access_det_deletedByIdTousers Users?   @relation("access_det_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_access_det_updatedByIdTousers Users?   @relation("access_det_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_access_det_createdByIdTousers Users?   @relation("access_det_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map(name: "access_det")
+  
+  @@index([accessId])
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model Menu {
+  id            Int           @id @default(autoincrement())
+  description   String        @db.VarChar(255)
+  level         Int           @db.SmallInt() @default(1) /// 1: parent 2: child
+  header        Int           @db.SmallInt() /// 0: parent for child get id parent
+  path          String        @db.VarChar(255)
+  status        Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  icon          String?        @db.VarChar(255)
+  sort          Int           @db.SmallInt() /// 0: parent for child get id parent
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime?     @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  accessDet     AccessDet[]
+
+  users_menu_deletedByIdTousers Users?   @relation("menu_deletedByIdTousers", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_menu_updatedByIdTousers Users?   @relation("menu_updatedByIdTousers", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_menu_createdByIdTousers Users?   @relation("menu_createdByIdTousers", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map(name: "menu")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
+
+model Users {
+  id            Int           @id @default(autoincrement())
+  accessId      Int?
+  username      String        @db.VarChar(255)
+  password      String        @db.VarChar(255)
+  fullname      String        @db.VarChar(255)
+  is_enabled    Int           @db.SmallInt() @default(1) /// 0: inactive 1: active
+  isDeleted     Int           @db.SmallInt() @default(0) @map(name: "is_deleted") /// 0: false 1: true
+  deletedAt     DateTime?     @map(name: "deleted_at")
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+  createdAt     DateTime      @default(now()) @db.Timestamp(6) @map(name: "created_at")
+  updatedAt     DateTime?     @updatedAt @db.Timestamp(6) @map(name: "updated_at")
+
+  access     Access?     @relation(fields: [accessId], references: [id])
+  
+  access_access_deletedByIdTousers  Access[]  @relation("access_deletedByIdTousers")
+  access_access_updatedByIdTousers  Access[]  @relation("access_updatedByIdTousers")
+  access_access_createdByIdTousers  Access[]  @relation("access_createdByIdTousers")
+  
+  access_det_access_det_deletedByIdTousers  AccessDet[]  @relation("access_det_deletedByIdTousers")
+  access_det_access_det_updatedByIdTousers  AccessDet[]  @relation("access_det_updatedByIdTousers")
+  access_det_access_det_createdByIdTousers  AccessDet[]  @relation("access_det_createdByIdTousers")
+  
+  menu_menu_deletedByIdTousers  Menu[]  @relation("menu_deletedByIdTousers")
+  menu_menu_updatedByIdTousers  Menu[]  @relation("menu_updatedByIdTousers")
+  menu_menu_createdByIdTousers  Menu[]  @relation("menu_createdByIdTousers")
+
+  @@map(name: "users")
+  
+  @@index([deletedById])
+  @@index([updatedById])
+  @@index([createdById])
+}
